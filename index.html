@@ -57,12 +57,20 @@ h2{font-size:28px;color:var(--gold);margin-bottom:6px}
 .dossier .row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed rgba(244,233,223,.25);padding:8px 0;font-size:14px}
 .dossier .row span{opacity:.65}
 .dossier .row b{text-align:right}
-.bar{height:12px;background:rgba(0,0,0,.35);border-radius:9px;overflow:hidden;margin:6px 0 4px}
-.bar i{display:block;height:100%;width:100%;background:var(--gold);transition:width 1s;border-radius:9px}
+.bar{height:12px;background:rgba(0,0,0,.35);border-radius:9px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .1s linear;border-radius:9px}
 .sw{display:flex;gap:8px;margin-bottom:14px}
 .sw button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--gold);background:transparent;color:var(--cream);font:700 13px Manrope,sans-serif}
 .sw button.on{background:var(--gold);color:var(--wine)}
 body.plush .dossier{background:linear-gradient(160deg,#a9384f,#6d1426)}
+.scan{display:none;margin-top:16px;text-align:center;padding:14px;border-radius:14px;background:rgba(0,0,0,.28)}
+.scan.on{display:block}
+#scanT{font-weight:700;font-size:14px;min-height:22px}
+#scanP{font:800 20px 'Playfair Display',serif;color:var(--gold)}
+.result{display:none;margin-top:16px;text-align:center;padding:18px 14px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--gold)}
+.result.on{display:block;animation:pop .7s}
+.result small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.result b{display:block;font:800 24px/1.25 'Playfair Display',serif}
 
 /* ded */
 .card.ded{filter:sepia(.8) contrast(1.1)}
@@ -177,17 +185,28 @@ footer{text-align:center;padding:40px 20px 70px;opacity:.7;font-size:13px}
   <p class="sub">Строго конфиденциально</p>
   <div class="card dossier">
     <div class="sw">
-      <button id="bStrict" class="on">Строгая Катя</button>
-      <button id="bPlush">Плюшевая булочка</button>
+      <button id="bStrict" class="on">Катя для окружающих</button>
+      <button id="bPlush">Проверить внутри</button>
     </div>
     <div class="row"><span>Имя</span><b>Катя / Мать</b></div>
+    <div class="row"><span>Вид со стороны</span><b>Строгая дама</b></div>
     <div class="row"><span>Должность</span><b>Мать группы</b></div>
     <div class="row"><span>Спец. навык</span><b>Накормить любого</b></div>
     <div class="row"><span>Слабость</span><b>Сергей Лазарев</b></div>
     <div class="row"><span>Скрытая функция</span><b>Режим деда</b></div>
-    <div style="margin-top:12px;font-size:13px"><span id="barLabel">Уровень серьёзности</span></div>
-    <div class="bar"><i id="bar"></i></div>
-    <div id="dosNote" style="font-size:13px;opacity:.8">Снаружи: 100%. Внутри: проверяется…</div>
+
+    <div id="dosNote" style="font-size:13px;opacity:.8;margin-top:12px">Снаружи всё серьёзно. Что внутри — неизвестно…</div>
+
+    <div class="scan" id="scan">
+      <div id="scanT">Начинаем проверку…</div>
+      <div class="bar"><i id="bar"></i></div>
+      <div id="scanP">0%</div>
+    </div>
+
+    <div class="result" id="result">
+      <small>Результат проверки</small>
+      <b>На сто процентов добрая и милая 🥐🤍</b>
+    </div>
   </div>
 </section>
 
@@ -389,15 +408,58 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.targe
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
 /* ===== ДОСЬЕ ===== */
-function mode(plush){
-  document.body.classList.toggle('plush',plush);
-  $('#bStrict').classList.toggle('on',!plush);$('#bPlush').classList.toggle('on',plush);
-  $('#bar').style.width='100%';
-  $('#barLabel').textContent=plush?'Уровень плюшевости':'Уровень серьёзности';
-  $('#dosNote').textContent=plush?'Внутри: 100% булочка 🥐. Подтверждено подругами.':'Снаружи: 100%. Внутри: проверяется…';
-  if(plush)confetti(60);
+const scanSteps=[
+  'Подключаемся к сердцу…',
+  'Ищем строгость…',
+  'Строгость найдена. Похоже, это просто обёртка…',
+  'Проверяем наличие булочки…',
+  'Измеряем уровень доброты…',
+  'Считаем количество хихиков…',
+  'Почти готово…'
+];
+let scanTimer=null;
+
+function resetDossier(){
+  clearInterval(scanTimer);scanTimer=null;
+  $('#scan').classList.remove('on');
+  $('#result').classList.remove('on');
+  $('#bar').style.width='0%';
+  $('#scanP').textContent='0%';
 }
-$('#bStrict').onclick=()=>mode(false);$('#bPlush').onclick=()=>mode(true);
+
+$('#bStrict').onclick=()=>{
+  resetDossier();
+  document.body.classList.remove('plush');
+  $('#bStrict').classList.add('on');$('#bPlush').classList.remove('on');
+  $('#dosNote').style.display='block';
+  $('#dosNote').textContent='Снаружи всё серьёзно. Что внутри — неизвестно…';
+};
+
+$('#bPlush').onclick=()=>{
+  if(scanTimer)return; // проверка уже идёт
+  resetDossier();
+  $('#bPlush').classList.add('on');$('#bStrict').classList.remove('on');
+  $('#dosNote').style.display='none';
+  $('#scan').classList.add('on');
+  let p=0;
+  $('#scanT').textContent=scanSteps[0];
+  scanTimer=setInterval(()=>{
+    p+=0.6+Math.random()*1.8;
+    if(p>=100)p=100;
+    $('#bar').style.width=p+'%';
+    $('#scanP').textContent=Math.floor(p)+'%';
+    $('#scanT').textContent=scanSteps[Math.min(scanSteps.length-1,Math.floor(p/100*scanSteps.length))];
+    if(p>=100){
+      clearInterval(scanTimer);scanTimer=null;
+      setTimeout(()=>{
+        $('#scan').classList.remove('on');
+        $('#result').classList.add('on');
+        document.body.classList.add('plush');
+        confetti(120);
+      },350);
+    }
+  },60);
+};
 
 /* ===== МЕМЫ ===== */
 $('#moj').onclick=()=>{
