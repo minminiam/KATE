@@ -68,6 +68,9 @@ body.plush .dossier{background:linear-gradient(160deg,#a9384f,#6d1426)}
 .card.ded{filter:sepia(.8) contrast(1.1)}
 .ded-emoji{font-size:44px;display:inline-block}
 .card.ded .ded-emoji{animation:wob .8s infinite}
+.ded-row{display:flex;gap:10px;flex-wrap:wrap}
+.ded-out{display:flex;align-items:center;gap:10px;margin-top:12px;min-height:60px}
+#dedT{font-size:15px;font-weight:700;line-height:1.4}
 
 /* music */
 .vol{height:10px;background:rgba(0,0,0,.4);border-radius:8px;overflow:hidden;margin-top:10px}
@@ -98,7 +101,7 @@ body.plush .dossier{background:linear-gradient(160deg,#a9384f,#6d1426)}
 .track::-webkit-scrollbar{display:none}
 .slide{flex:0 0 100%;scroll-snap-align:center;margin:0;position:relative;height:440px;background:#111}
 .slide img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .4s}
-.slide figcaption{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:13px;z-index:2}
+.slide figcaption{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:14px;font-weight:600;z-index:2}
 .stamp{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) rotate(-14deg) scale(2.2);border:4px solid #e0344f;color:#e0344f;font:800 24px 'Playfair Display',serif;padding:6px 14px;border-radius:8px;opacity:0;z-index:2;background:rgba(0,0,0,.35);text-align:center;transition:all .25s;pointer-events:none}
 .slide.st .stamp{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(1)}
 .f-noir img{filter:grayscale(1) contrast(1.2)}
@@ -218,11 +221,14 @@ footer{text-align:center;padding:40px 20px 70px;opacity:.7;font-size:13px}
   </div>
 
   <div class="card" id="dedCard">
-    <div class="tag">Секретный режим</div>
-    <h3>Дед</h3>
-    <p>Включается без предупреждения.</p>
-    <button class="btn" id="ded">Включить режим деда</button>
-    <div class="out"><span class="ded-emoji">🥸</span> <span id="dedT" style="font-size:15px"></span></div>
+    <div class="tag">Секретный режим 18+ (по версии деда)</div>
+    <h3>Очень похотливый дед</h3>
+    <p>Включается без предупреждения. Жми ещё и ещё.</p>
+    <div class="ded-row">
+      <button class="btn" id="ded">Включить режим деда</button>
+      <button class="btn ghost" id="dedOff" style="display:none">Выгнать деда</button>
+    </div>
+    <div class="ded-out"><span class="ded-emoji">🥸</span> <span id="dedT"></span></div>
   </div>
 
   <div class="card">
@@ -308,12 +314,12 @@ footer{text-align:center;padding:40px 20px 70px;opacity:.7;font-size:13px}
 /* ===== НАСТРОЙКИ ===== */
 const BIRTHDAY = new Date('2026-11-18T21:00:00'); // 18 ноября 2026, 21:00 (по времени на телефоне)
 const PHOTOS = [
-  {src:'photos/1.jpg', cap:'Кадр №1. Оператор: Катя (разумеется)'},
-  {src:'photos/2.jpg', cap:'Кадр №2. Одобрено Матерью'},
-  {src:'photos/3.jpg', cap:'Кадр №3. Репетиция без музыки, всё идеально'},
-  {src:'photos/4.jpg', cap:'Кадр №4. С музыкой уже не так идеально'},
-  {src:'photos/5.jpg', cap:'Кадр №5. Это была идеальная попытка'},
-  {src:'photos/6.jpg', cap:'Кадр №6. Без депозита, зато без кредита'}
+  {src:'photos/1.jpg', cap:'Лучшая фенечка'},
+  {src:'photos/2.jpg', cap:'Аутфит сто из ста'},
+  {src:'photos/3.jpg', cap:'Съёмки прошли идеально'},
+  {src:'photos/4.jpg', cap:'Самая шикарная женщина'},
+  {src:'photos/5.jpg', cap:'Специалист на все руки'},
+  {src:'photos/6.jpg', cap:'Лучший артист'}
 ];
 const CERT_URL = new URL('certificate.pdf', location.href).href;
 
@@ -351,7 +357,6 @@ function tick(){
   $('#s').textContent=pad(Math.floor(d/1e3)%60);
   if(d===0){
     $('#skip').textContent='Открыть подарок 🎁';
-    // если ждали на этой странице, открываем сами
     if(waitedFromStart && !opened) openSite();
   }
 }
@@ -402,17 +407,61 @@ $('#moj').onclick=()=>{
 let hn=0;$('#hih').onclick=()=>{hn++;$('#hihN').textContent=hn;popAt($('#hihCard'),'хихик');if(hn===10)toast('10 хихиков! Хихик-мастер 🏅')};
 const quips=['пока тихо','Разминка.','«А вот Сергей Лазарев…»','Катя, мы поняли, он великий.','Без Сергея разговор не считается.','Новый рекорд!','Сергей гордится (наверное).'];
 let ln=0;$('#laz').onclick=()=>{ln++;$('#lazN').textContent=ln;$('#lazQ').textContent=quips[Math.min(ln,quips.length-1)];if(ln%7===0){rain(['🎤','⭐','🎶'],18)}};
-const dedPh=['Ну-ка, красавицы, подойдите к дедушке… хе-хе','Кхм. А кто тут у нас такой хорошенький?','Дедушка просто посмотреть…','Дедушка устал. Налейте чайку.'];
-$('#ded').onclick=()=>{const c=$('#dedCard');c.classList.toggle('ded');$('#dedT').textContent=c.classList.contains('ded')?rnd(dedPh):'';$('#ded').textContent=c.classList.contains('ded')?'Выключить (или ещё раз)':'Включить режим деда'};
+
+/* ===== ДЕД ===== */
+const dedPh=[
+  'Ну-ка, красавицы, идите к дедушке… у него для вас конфетка. И не только конфетка… хе-хе 🍬',
+  'Деточка, давай дедушка тебя разомнёт? Спина у него не болит, зато ручки скучают… 🙌',
+  'Ох, какие у вас таланты… Дедушка оценивает. Долго. Пристально. 🧐',
+  'Дедушка в молодости был огонь. Сейчас тоже огонь, только с радикулитом. Но ручки ещё шаловливые, хе-хе 🔥',
+  'Ой, что-то мне жарко стало… Расстегните дедушке верхнюю пуговку, красавицы 😏',
+  'Поближе сядь, дедуле тебя плохо видно… и слышно… и вообще, ближе, ближе 🪑',
+  'Дедушка не пристаёт. Дедушка проявляет глубокий интерес. Хе-хе-хе. 🥸',
+  'А давайте вы меня обнимете? Нет, не так. Крепче. И подольше. И пониже… спины, конечно 🤗',
+  'Внученька, а хочешь, дедушка научит тебя варить борщ? Ну или чего захочешь, хе-хе 🍲',
+  'Дедушка подмигнул. Дедушка не моргал. Дедушка просто пристально смотрит на всех сразу 👁️',
+  'Кто тут у нас такая фигуристая? Дедушке срочно нужны очки… Ближе подойди, не вижу 👓',
+  'Дай-ка дедушка ущипнёт, проверит, настоящая ли ты. Чисто научный интерес 🔬',
+  'Красавицы, а сводите дедушку на тайский массаж? Он и вам спинку помнёт, хе-хе 💆'
+];
+let dedBag=[],dedLast='';
+function nextDed(){
+  if(!dedBag.length){
+    dedBag=[...dedPh].sort(()=>Math.random()-.5);
+    if(dedBag[dedBag.length-1]===dedLast)dedBag.unshift(dedBag.pop());
+  }
+  dedLast=dedBag.pop();
+  return dedLast;
+}
+$('#ded').onclick=()=>{
+  $('#dedCard').classList.add('ded');
+  $('#dedT').textContent=nextDed();
+  $('#ded').textContent='Ещё! 🥸';
+  $('#dedOff').style.display='inline-block';
+};
+$('#dedOff').onclick=()=>{
+  $('#dedCard').classList.remove('ded');
+  $('#dedT').textContent='';
+  $('#ded').textContent='Включить режим деда';
+  $('#dedOff').style.display='none';
+  toast('Дед ушёл. Но он вернётся 👀');
+};
+
+/* ===== ЕДА ===== */
 let fd=0;
 document.querySelectorAll('#food button').forEach(b=>b.onclick=()=>{rain([b.dataset.e],10);fd++;$('#foodOut').textContent='Порций выдано: '+fd+'. Мало, надо ещё!'});
 $('#feedAll').onclick=()=>{rain(['🍲','🥟','🥞','🍰','🍕','🍜'],40);$('#foodOut').textContent='Все сыты. Мать довольна 🤍'};
+
+/* ===== ЗАПИСЬ ВОКАЛА ===== */
 let tk=0;
-const bad=['«Это ужасно, давайте сотрём»','«Я сама не могу это слушать»','«Я везде фальшивлю»'];
+const bad=['«Это ужасно, давайте сотрём»','«Я сама не могу это слушать»','«Я везде фальшивлю»','«Это позор, перепишем»','«Кто меня вообще на это уговорил?»'];
 $('#rec').onclick=()=>{
   tk++;
-  $('#recLog').insertAdjacentHTML('afterbegin',`<div style="margin-bottom:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.25)"><b>Дубль ${tk}</b><br>Катя: ${rnd(bad)} (оценка 3/10)<br>Девочки: «Идеальная попытка!» (11/10)<br>✅ Идёт в финальную версию</div>`);
+  const score=1+Math.floor(Math.random()*5); // от 1 до 5
+  $('#recLog').insertAdjacentHTML('afterbegin',`<div style="margin-bottom:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.25)"><b>Дубль ${tk}</b><br>Катя: ${rnd(bad)} (оценка ${score}/10)<br>Девочки: «Идеальная попытка!» (11/10)<br>✅ Идёт в финальную версию</div>`);
 };
+
+/* ===== ПЕНИЕ ===== */
 $('#mus').onchange=e=>{
   const on=e.target.checked,o=$('#musOut'),v=$('#vol');
   if(on){o.innerHTML='🎵 Музыка включилась… <span class="off-key">ла-а-ла-а-ааа?</span> 💀';v.style.width='8%';v.style.background='#ff5a73'}
